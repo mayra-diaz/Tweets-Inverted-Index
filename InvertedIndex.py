@@ -46,8 +46,7 @@ class InvertedIndex():
         else:
             f = open(self.metadata_file, 'x')
             f.close()
-            self.metadata = {'number_of_tweets': 0, 'number_of_documents': 0, 'number_of_blocks': 0,
-                             'number_of_tokens': 0}
+            self.metadata = {'number_of_tweets': 0, 'number_of_documents': 0, 'number_of_blocks': 0}
 
     def write_metadata(self):
         with open(self.metadata_file, 'w') as file:
@@ -65,9 +64,6 @@ class InvertedIndex():
 
     def get_number_of_blocks(self):
         return self.metadata['number_of_blocks']
-
-    def get_number_of_tokens(self):
-        return self.metadata['number_of_tokens']
 
     def clear_current_index(self):
         self.current_index = {}
@@ -147,12 +143,12 @@ class InvertedIndex():
   """
 
     def setAllWeights(self):
-        for token in self.current_index:
-            for doc in token['docs']:
-                self.current_index[token]['docs'][doc]['w'] = self.weight_td_idf(token, doc)
+        for token in self.current_index.keys():
+            for doc in self.current_index[token]['tweets'].keys():
+                self.current_index[token]['tweets'][doc]['w'] = self.weight_td_idf(token, doc)
 
     def weight_td_idf(self, token, doc):
-        return self.util.weight_td_idf(self.current_index[token]['docs'][doc], self.current_index[token]['df'],
+        return self.util.weight_td_idf(self.current_index[token]['tweets'][doc]['tdf'], self.current_index[token]['df'],
                                        self.get_number_of_tweets())
 
     """
@@ -221,12 +217,12 @@ class InvertedIndex():
             if token in self.current_index:
                 self.current_index[token]['tf'] += 1
                 if tweet_id in self.current_index[token]['tweets']:
-                    self.current_index[token]['tweets'][tweet_id] += 1
+                    self.current_index[token]['tweets'][tweet_id]['tdf'] += 1
                 else:
-                    self.current_index[token]['tweets'][tweet_id] = 1
+                    self.current_index[token]['tweets'][tweet_id] = {'tdf': 1}
                     self.current_index[token]['df'] += 1
             else:
-                self.current_index[token] = {'tf': 1, 'tweets': {tweet_id: 1}, 'df': 1}
+                self.current_index[token] = {'tf': 1, 'tweets': {tweet_id: {'tdf': 1}}, 'df': 1}
 
     def verify_current_index(self):
         if len(self.current_index) > 0:
@@ -238,7 +234,7 @@ class InvertedIndex():
             end = len(self.current_index)
         file = open(self.base_block_name + str(self.get_number_of_blocks()) + '.json', 'x')
         self.metadata['number_of_blocks'] += 1
-        file.write(json.dumps(list(self.current_index.items())[start:end]))
+        file.write(json.dumps(dict(list(self.current_index.items())[start:end])))
         file.close()
 
     def merge_index_blocks(self):
@@ -248,6 +244,7 @@ class InvertedIndex():
                 self.current_index.update(temp)
         self.util.clear_dir(self.index_blocks_directory)
         self.current_index = dict(sorted(self.current_index.items(), key=lambda x: x[0], reverse=False))
+        self.setAllWeights()
         start = 0
         end = self.BLOCK_SIZE
         self.metadata['number_of_blocks'] = 0
@@ -257,7 +254,6 @@ class InvertedIndex():
             end += self.BLOCK_SIZE
         if start < len(self.current_index):
             self.write_block(start)
-        self.metadata['number_of_tokens'] = len(self.current_index)
         self.clear_current_index()
 
     """
@@ -287,10 +283,12 @@ class InvertedIndex():
     def bs_block(self, block_number, token):
         with open(self.base_block_name + str(block_number) + '.json', 'r') as block:
             index = json.load(block)
-        if token in index:
-            print(index[token])
-            return index[token]
-        return '', []
+        tokens = list(index.keys())
+        if token in tokens:
+            return token, index[token]
+        elif tokens[0] < token and token < tokens[-1]:
+            return '', []
+        return tokens[0], []
 
     def get_index_interseccion_with_query(self, query_tokens):
         all_ids = set()
@@ -299,7 +297,7 @@ class InvertedIndex():
             tk, info = self.bs_token_info(token)
             if tk == token:
                 tokens.append(token)
-                for d in info['docs'].keys():
+                for d in info['tweets'].keys():
                     if not d in all_ids:
                         all_ids.add(d)
         weights = {}
@@ -307,10 +305,9 @@ class InvertedIndex():
             weights[id] = []
         for token in tokens:
             tk, info = self.bs_token_info(token)
-            ids = set(ids)
             for id in list(all_ids):
-                if id in info['docs'].keys():
-                    weights[id].append(info['docs'][id]['w'])
+                if id in info['tweets'].keys():
+                    weights[id].append(info['tweets'][id]['w'])
                 else:
                     weights[id].append(0)
         return weights

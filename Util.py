@@ -18,9 +18,13 @@ class Util():
 
     def pre_process(self, text):
         tokens = []
-        # Tokenizar el texto
-        for line in text:
-            tokens += nltk.word_tokenize(line.lower())
+        if isinstance(text, str):
+            tokens = nltk.word_tokenize(text.lower())
+        else:
+            # Tokenizar el texto
+            for line in text:
+                tokens += nltk.word_tokenize(line.lower())
+
         # Retirar signos innecesarios
         with open('symbols.txt') as file:
             symbol_list = [line.lower().strip() for line in file]
@@ -44,4 +48,7 @@ class Util():
         return root_tokens
 
     def weight_td_idf(self, tfd, dtf, n):
-        return log10(1 + tfd) * log10(n/dtf)
+        try:
+            return log10(1 + tfd) * log10(n/dtf)
+        except:
+            return 0
