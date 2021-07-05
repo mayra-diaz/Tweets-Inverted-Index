@@ -1,12 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, Response, flash
 import json
-import importlib
 import sys
 import os
+import glob
 from IndexHandler import IndexHandler
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append("../merging_blocks/0.json")
 
 app = Flask(__name__,
             static_url_path='', 
@@ -15,6 +14,7 @@ app = Flask(__name__,
 app.secret_key = b'bd2/'
 
 indexHandler = IndexHandler()
+input_files = './input_files/'
 
 @app.route('/')
 def home():
@@ -38,10 +38,13 @@ def upload():
    uploaded_files = request.files.getlist("file")
 
    for file in uploaded_files:
-      with open("clean/"+str(file.filename), "wb") as archivo:
-         archivo.write(file.read())
+      with open(input_files+str(file.filename), "wb") as file:
+         file.write(file.read())
    
-   indexHandler.add_document
+   indexHandler.add(input_files)
+   filelist = glob.glob(os.path.join(input_files, "*"))
+   for f in filelist:
+       os.remove(f)
    
    flash(u'Los datos se han cargado de manera correcta.',  'alert-success')
    return render_template('buscador.html')
