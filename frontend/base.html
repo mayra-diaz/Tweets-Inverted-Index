@@ -1,0 +1,74 @@
+<!doctype html>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-CuOF+2SnTUfTwSZjCXf01h7uYhfOBuxIhGKPbfEJ3+FqH/s6cIFN9bGr1HmAg4fQ" crossorigin="anonymous">
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<script src="https://cdn3.devexpress.com/jslib/19.1.3/js/dx.all.js"></script>
+<script src="https://unpkg.com/devextreme-aspnet-data@2.2.1/js/dx.aspnet.data.js"></script>
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+
+
+<title>DB II</title>
+<section>
+    <link rel="stylesheet" href="style.css">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class=flashes>
+        {% for category, message in messages %}
+          <div class="alert {{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    
+    <main class="flex-shrink-0">
+        <div id="loading" class="loader">Loading...</div>
+        <div class="container" id="uploader">
+            <h1 class="mt-5">Agregar Tweets</h1>
+            <p class="lead">Suba su archivos en formato JSON a continuación: </p>
+            <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                <div>
+                    <input type="file" class="form-control-file mb-4 mt-2" id="file" accept="application/json" name="file" multiple>
+                </div>
+                <div>
+                    <button  class="btn btn-primary" onclick="loading();">Subir</button>
+                </div>
+            </form>
+        </div>
+    
+        <div class="container">
+            <h1 class="mt-5">Buscador de Tweets</h1>
+            <p class="lead">Ingrese su búsqueda a continuación: </p>
+            <form action="javascript:void(0);" method="post">
+            <div class="mb-3">
+                <input type="text" class="form-control" id="searchString" name="searchString">
+                <div id="stringHelp" class="form-text">Ingrese su búsqueda a continuación.</div>
+            </div>
+            <button type="button" onClick="buscar()" class="btn btn-primary">Buscar</button>
+            </form>
+        </div>
+    
+        <div class="container">
+            <div id="titulo"></div>
+            <div id="resultados"></div>
+        </div>
+    </main>
+    
+    <script type="text/javascript" src="functions.js"></script>
+    
+
+
+
+
+
+
+
+
+</section>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-popRpmFF9JQgExhfw5tZT4I9/CI5e2QcuUZPOVXb1m7qUmeR2b50u+YFEYe1wgzy" crossorigin="anonymous"></script>
