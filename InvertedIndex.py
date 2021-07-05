@@ -1,5 +1,6 @@
 from Util import Util
-import os, glob
+import os
+import glob
 import shutil
 import json
 import csv
@@ -79,7 +80,9 @@ class InvertedIndex():
 
   def get_tweet_file(self, position):
     info = linecache.getline(self.id_document_file, position).split(',')
-    return info[0], info[1]
+    if len(info) == 2:
+      return info[0], info[1]
+    return '', ''
 
   def bs_tweet_file(self, id):
     low = 0
@@ -87,7 +90,9 @@ class InvertedIndex():
     while low <= high:
       mid = (high + low) // 2
       mid_id, document_name = self.get_tweet_file(mid)
-      if mid_id == id:
+      if mid_id == '' or document_name == '':
+        return 0
+      elif mid_id == id:
         return mid
       elif mid_id < id:
         low = mid + 1
@@ -120,10 +125,10 @@ class InvertedIndex():
       for i in docs:
           current.append(i.split(','))
           current[-1][1] = current[-1][1][:-1]
-      i = 1
       for id in tweets:
         current.insert(self.bs_tweet_file(id)+1, [str(id),file_name])
-        i += 1
+        self.write_id_document(id, file_name)
+
     with open(self.id_document_file, 'w') as docs:
       write = csv.writer(docs)
       write.writerows(current)
@@ -144,7 +149,7 @@ class InvertedIndex():
   ----------- ADD DOCUMENTS -----------
   """
   def clean_file(self, file_name, final_file_name):
-    tweets = dict()
+    tweets = []
     result = dict()
     with open(file_name) as tweets_file:
       json_file = json.load(tweets_file)
@@ -155,7 +160,7 @@ class InvertedIndex():
         final_tweet["date"] = tweet["date"]
         result[tweet["id"]] = final_tweet
         tweets.append(tweet['id'])
-    with open("clean_tweets/"+final_file_name, 'w') as file:
+    with open(final_file_name, 'w') as file:
       file.write(json.dumps(result))
     self.add_tweets(tweets, final_file_name)
     return result
@@ -180,10 +185,9 @@ class InvertedIndex():
     for i in range(len(document_files)):
       name = str(i)+'.json'
       starts_at = 0
-      temp = document_files[i].find('/')
-      while temp != -1:
-        starts_at = temp
-        temp = document_files[i].find('/')
+      temp = [pos for pos, char in enumerate(document_files[i]) if char == '/']
+      if len(temp) != 0:
+        starts_at = temp[-1]
       os.rename(document_files[i], document_files[i][:starts_at+1]+name)
       shutil.move(document_files[i][:starts_at+1]+name,self.temp_directory+name)
 
@@ -191,8 +195,8 @@ class InvertedIndex():
   ----------- BSI -----------
   """
   def add_document(self, document_file_name):
-    tweets = self.clean_file(document_file_name, self.base_doc_name+str(self.get_number_of_documents()))
-    self.get_number_of_documents += 1
+    tweets = self.clean_file(document_file_name, self.base_document_name+str(self.get_number_of_documents()))
+    self.metadata['number_of_documents'] += 1
     for id, tweet in tweets.items():
       tokens = self.util.pre_process(tweet['body'])
       self.add_tweet_tokens(id, tokens)
@@ -214,7 +218,7 @@ class InvertedIndex():
 
   def verify_current_index(self):
     if len(self.current_index) > 0:
-      self.write_block
+      self.write_block()
     self.clear_current_index()
 
   def write_block(self, start=0, end=-1):
@@ -222,7 +226,7 @@ class InvertedIndex():
       end = len(self.current_index)
     file = open(self.base_block_name+str(self.get_number_of_blocks())+'.json', 'x')
     self.metadata['number_of_blocks'] += 1
-    file.write(json.dumps(self.current_index[start:end]))
+    file.write(json.dumps(list(self.current_index.items())[start:end]))
     file.close()
 
   def merge_index_blocks(self):
