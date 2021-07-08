@@ -26,24 +26,15 @@ function buscar(){
                 var date = parsedDate.toLocaleDateString('en-GB'); 
                 
                 var string = "";             
-                string += "<article class='card mb-4'>"
-                string += "<header class='card__header'>"
-                string +=     "<div class='card__userinfo'>"
-                string +=        "<h2 class='card__name'>"+ value.userName +"</h2>"
-                string +=     "</div>"
+                string += "<article class='tweet mb-4'>"
+                string += "<header class='my_header'>"
+                string +=     "<h2 class='my_username'>"+ value.user_name +"</h2>"
                 string += "</header>"
                 
-                string += "<div class='card__text'>"
-                string +=     "<p class='card__paragraph'>"+ value.body +"</p>"
-                string +=     "<span class='card__date'>" + date + " - " + time + "</span>"
+                string += "<div class='my_text'>"
+                string +=     "<p class='my_paragraph'>"+ value.body +"</p>"
+                string +=     "<span class='my_date'>" + date + " - " + time + "</span>"
                 string += "</div>"
-                
-                string += "<footer class='card__footer'>"
-                string +=     "<span class='fas fa-comment'></span>"
-                string +=     "<span class='fas fa-redo'></span>"
-                string +=     "<span class='fas fa-heart'></span>"
-                string +=     "<span class='fas fa-share'></span>"
-                string += "</footer>"
                 string += "</article>"
 
                 $("#resultados").append(string);

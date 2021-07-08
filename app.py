@@ -3,13 +3,14 @@ import json
 import sys
 import os
 import glob
+import shutil
 from IndexHandler import IndexHandler
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 app = Flask(__name__,
             static_url_path='', 
-            static_folder='frontend/static',
+            static_folder='frontend/templates',
             template_folder='frontend/templates')
 app.secret_key = b'bd2/'
 
@@ -38,8 +39,12 @@ def upload():
    uploaded_files = request.files.getlist("file")
 
    for file in uploaded_files:
-      with open(input_files+str(file.filename), "wb") as file:
-         file.write(file.read())
+       starts_at = 0
+       temp = [pos for pos, char in enumerate(file) if char == '/']
+       if len(temp) != 0:
+           starts_at = temp[-1]
+       name = file[starts_at + 1:]
+       shutil.move(file, input_files+name)
    
    indexHandler.add(input_files)
    filelist = glob.glob(os.path.join(input_files, "*"))

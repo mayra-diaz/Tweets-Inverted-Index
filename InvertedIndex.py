@@ -85,7 +85,7 @@ class InvertedIndex():
     def get_tweet_file(self, position):
         info = linecache.getline(self.id_document_file, position).split(',')
         if len(info) == 2:
-            return info[0], info[1]
+            return info[0], info[1][:-1]
         return '', ''
 
     def bs_tweet_file(self, id):
@@ -94,12 +94,12 @@ class InvertedIndex():
         mid = 0
         while low <= high:
             mid = (high + low) // 2
-            mid_id, document_name = self.get_tweet_file(mid)
+            mid_id, document_name = self.get_tweet_file(mid+1)
             if mid_id == '' or document_name == '':
                 return 0
-            elif mid_id == id:
+            elif int(mid_id) == int(id):
                 return mid
-            elif mid_id < id:
+            elif int(mid_id) < int(id):
                 low = mid + 1
             else:
                 high = mid - 1
@@ -109,18 +109,18 @@ class InvertedIndex():
         documents = dict()
         for id in ids:
             position = self.bs_tweet_file(id)
-            id, file = self.get_tweet_file(position)
+            id, file = self.get_tweet_file(position+1)
             if not file in documents:
                 documents[file] = [id]
             else:
-                documents[file].append(position)
+                documents[file].append(id)
 
         tweets = []
-        for file, ids in documents.items():
+        for file, ids_ in documents.items():
             with open(file) as tweets_file:
-                json = json.load(tweets_file)
-                for id in ids:
-                    tweets.append(json(id))
+                data = json.load(tweets_file)
+                for id in ids_:
+                    tweets.append(data[id])
         return tweets
 
     def add_tweets(self, tweets, file_name):
@@ -137,6 +137,7 @@ class InvertedIndex():
         with open(self.id_document_file, 'w') as docs:
             write = csv.writer(docs)
             write.writerows(current)
+        self.metadata['number_of_tweets'] += len(tweets)
 
     """
   ----------- SCORING -----------
