@@ -3,7 +3,6 @@ import json
 import sys
 import os
 import glob
-import shutil
 from IndexHandler import IndexHandler
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,12 +38,11 @@ def upload():
    uploaded_files = request.files.getlist("file")
 
    for file in uploaded_files:
-       starts_at = 0
-       temp = [pos for pos, char in enumerate(file) if char == '/']
-       if len(temp) != 0:
-           starts_at = temp[-1]
-       name = file[starts_at + 1:]
-       shutil.move(file, input_files+name)
+      with open(str(file.filename), "r") as file:
+          f = open(input_files+file.filename, 'x')
+          f.close()
+          with open(str(input_files+file.filename), 'w') as new_file:
+            new_file.write(file.read())
    
    indexHandler.add(input_files)
    filelist = glob.glob(os.path.join(input_files, "*"))
